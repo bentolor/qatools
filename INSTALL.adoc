@@ -1,0 +1,14 @@
+= How to install
+
+== 1. Install ruby gem bundler, then use bundler to install the missing gems
+
+----
+sudo -H gem install bundler
+bundle install --path .gem/bundle
+----
+
+== 2. Ensure git submodule is checked out
+
+----
+git submodule update --recursive --init
+----

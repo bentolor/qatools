@@ -1,0 +1,5 @@
+= Qualität durch Statische Codeprüfung – Tools, Techniken, Erfahrungen & Empfehlungen
+
+In dieser Session resümiere ich etwas über den aktuellen Stand an verfügbaren Tools für die statischen Codeprüfungen: Was hat sich bewährt? Von welchen Vorstellungen sind wir inzwischen abgekommen? Ist SonarQube und JSHint noch empfehlenswert? Wo bewegen sich andere Marktteilnehmer im Moment?
+
+Diese Session zeigt im schnellen Takt verschiedene Tools und Trends auf und gibt dazu persönliche Einschätzungen & Meinungen an die Hand.

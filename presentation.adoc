@@ -1,0 +1,451 @@
+= Statische Codeprüfung: Tools, Techniken, Erfahrungen & Empfehlungen
+:author: Benjamin Schmid @bentolor <benjamin.schmid@exxcellent.de>
+:date: 2020-01-31
+:icons: font
+// we want local served fonts. Therefore patched sky.css
+//:revealjs_theme: sky
+:revealjs_customtheme: css/sky.css
+//:revealjs_autoSlide: 5000
+:revealjs_history: true
+:revealjs_fragmentInURL: true
+:revealjs_viewDistance: 5
+:revealjs_width: 1408
+:revealjs_height: 792
+:revealjs_controls: true
+:revealjs_controlsLayout: edges
+:revealjs_controlsTutorial: true
+:revealjs_slideNumber: c/t
+:revealjs_showSlideNumber: speaker
+:revealjs_autoPlayMedia: true
+//:revealjs_defaultTiming: 42
+//:revealjs_transitionSpeed: fast
+:revealjs_parallaxBackgroundImage: images/construction.jpg
+:revealjs_parallaxBackgroundSize: 4928px 3264px
+:customcss: css/presentation.css
+:imagesdir: images
+:source-highlighter: highlightjs
+:highlightjs-theme: css/atom-one-light.css
+// we want local served font-awesome fonts
+:iconfont-remote!:
+:iconfont-name: fonts/fontawesome/css/all
+:title-slide-background-video: fail.mp4
+:title-slide-background-video-loop: true
+:background-opacity: 0.6
+
+[.notes]
+--
+--
+
+[.lightbg,background-video="images/beer.mp4",background-video-loop="true",background-opacity="0.4"]
+== Agenda
+
+1. Motivation & Überblick
+2. Java
+[.x-small.decent]
+** Linter
+** Annotations
+** Architektur
+3. Web
+4. Andere Sprachen
+5. Bottom Line
+
+
+
+
+== Motivation & Überblick
+
+[%notitle]
+=== Begriff
+
+> Static program analysis is the analysis of computer software that is performed *without actually executing programs*, in contrast with dynamic analysis, which is analysis performed on programs while they are executing.
+>
+> In most cases the analysis is performed on the *source code*, sometimes on the object code.
+
+=== Statische Code-Prüfung
+
+[.col2.small]
+--
+.The Good
+* Probleme *proaktiv* & *frühzeitig* finden
+* Lösungsvorschläge & *Coaching-Effekt*
+* *Automatisiert* & kontinuierlich
+* *Flächendeckende* Analyse
+* _"wie verstanden"_ vs. _"wie gemeint"_
+* Enforcement & _Denk-Mal!_-Trigger +
+  [decent]#(siehe: link:https://www.exxcellent.de/confluence/pages/viewpage.action?pageId=65113099&src=contextnavpagetreemode[eXXcellent Code Quality Rules])#
+--
+
+[.col2.small]
+--
+.The Bad and the Ugly
+* Häufige Frustrations-Quelle
+* Aktionismus statt Reflexion
+* Gängige Probleme:
+** False-positives
+** Umständliche Triagierung
+* Mangelnde Performance
+--
+
+=== Ideale statische Code-Analyse …
+* gibt *früh* & *schnell* Feedback, vermeiden Loops [decent]#(Integration: Build)#
+* hat eine geringe false-positive Rate
+* liefert *potente Defaults*, lässt sich leicht anpassen
+* liefert *Erläuterungen* & Hinweise
+* *versteht Syntax* von Sprache *&* Framework
+* differenziert nach *Prioritäten* und kommuniziert angemessen
+* *_Doesn't-get-in-your-way™_* (Performance, UX, …)
+
+
+
+
+== Java
+
+[%notitle]
+=== PMD
+
+[.col2]
+--
+image:https://pmd.github.io/img/pmd_logo.png[PMD Logo]
+
+[decent]#Einschätzung: ( icon:thumbs-up[Recommend!] )#
+
+[.x-small.decent]
+Alternative Lösungen verfügbar +
+Erfordert Analyse-Lauf
+
+--
+[.col2]
+--
+* Sehr aktiv gepflegt, BSD-Lizenz
+* Analyse-Lauf
+* breite Integration  +
+  [.decent.x-small]#(Ant/Maven/Gradle, IDE, SonarQube)#
+* ~300 Java-Rules
+--
+
+[%notitle]
+=== Checkstyle & Findbugs
+
+[.col2]
+--
+.Checkstyle
+
+* Fokus: (Textueller) Codestyle
+* Aktiv entwickelt
+* IDE-unterstützt (Formatter)
+
+[decent]#Einschätzung: icon:meh[meh]#
+
+[.x-small.decent]
+Fokus Style + Laufbasiert  +
+→ ungünstige Kosten/Nutzen +
+IDEA flexibler
+--
+
+[.col2]
+--
+.Findbugs
+
+* Bytecode-basiert
+* Urvater mit Fokus: Bugs
+* Project: ceased (2015)
+
+[decent]#Einschätzung: icon:thumbs-down[No]#
+--
+
+=== SonarQube
+[.col3-lc]
+--
+image:https://www.sonarqube.org/sonarqube-8-1/index/python_analyze.png[SonarQube]
+--
+
+[.col3-r.small]
+--
+//.SonarQube
+* Web-Interface
+* Ehemals: Wrapper um PMD, Findbugs, Checkstyle, …
+* Transition: → https://rules.sonarsource.com/
+* Breite Sprachabdeckung, Bug & Security Patterns, Erläuterungen
+
+--
+
+
+=== SonarQube: Erfahrungen
+[small]
+* *Verkrüppelte Branch-Analysis* in der Community Version +
+  → teure Payware: Branch-Support & Gitlab PR decoration
+* Seit v7: *keine Package Cycles* mehr +
+  Seit v8.1 Wieder da: Build Breaker (`-Dsonar.qualitygate.wait=true`)
+* Geht leicht verloren: Triagierung von false-positives
+* Convoluted Konfiguration von Rechte, Issues, Quality Profiles & Gate
+* Eher langer, schwerfälliger Weg von Codeänderung zum Feedback
+
+[.decent.small]#Einschätzung: icon:meh[meh] / ( icon:thumbs-up[ok] )#
+[.x-small.decent]#Sehr leistungsfähig, etwas schwerfällig/Enterprisey#
+
+
+=== SonarLint
+[.col3-lc]
+--
+video::https://www.sonarlint.org/intellij/intellij.mp4[SonarLint]
+--
+
+[.col3-r.small]
+--
+* Standalone oder Connected-Mode mit SonarQube
+* Support: IDEA, Eclipse, VS Code, VS
+* Gleiche Rules wie SonarQube
+* Direkteres Feedback
+
+[decent]#Einschätzung: icon:thumbs-up[ok]#
+[.x-small.decent]
+--
+
+[%notitle,background-video="images/idea-inspections.mp4"]
+=== IntelliJ – der Gold-Standard
+
+[.col3-lc]
+--
+//video::idea-inspections.mp4[IDEA]
+--
+
+[.col2]
+--
+&nbsp;
+--
+
+[.col2.small.lightbg]
+--
+.IntelliJ – der Gold-Standard
+* Psi-basiert +
+→ *Live*-Visualisierung +
+→ auch bei defektem Code +
+→ *performant*
+* Mächtige *Intentions & Quick-Fixes*
+* *priorisierte* Visualisierung a
+* On-the-fly & Easy: Prio & Konfiguration
+* per-*Scope* Settings
+* *Tausende* Inspections, oft mit Optionen
+
+*Vorlage: https://gitlab.exxcellent.de/exxcellent-technology/exxcellent-qa/blob/master/java/intellij-idea/.idea/inspectionProfiles/exxcellent_intellij_2019_1.xml[`exxcellent_intellij_2019_1.xml`]*
+
+[decent]#Einschätzung: icon:thumbs-up[ok]#
+[.x-small.decent]
+--
+
+=== `idea-cli-inspector`
+
+[.col2.small]
+--
+[source,bash]
+----
+docker run --rm -v $(pwd):/project \
+     bentolor/idea-cli-inspector \
+     -rf pom.xml -p inspectionprofile.xml
+----
+
+* Startet IDEA-inspections headless
+* Analysiert Ergebnisse & lesbaren Report
+* Vergleichbar: Offizielles link:https://github.com/JetBrains/inspection-plugin[inspection-plugin] & link:https://github.com/arturbosch/detekt[detekt]
+* Probleme beider: 100% Stabilität +
+  [decent]#siehe auch link:https://github.com/JetBrains/inspection-plugin/issues/19[Issue 19]#
+
+[x-small]#https://github.com/bentolor/idea-cli-inspector#
+--
+[.col2]
+--
+image:ideacli.png[idea-cli-inspector]
+--
+
+=== SpotBugs
+
+[.col3-lc]
+--
+image::spotbugs.png[spotbugs page]
+--
+
+[.col3-r.x-small]
+--
+* (Spiritueller) Nachfolger von FindBugs
+* Bytecode-basiert!
+* Umständliche Supression via XML
+
+[decent]#Einschätzung: icon:meh[ok]#
+[.x-small.decent]
+Noch geringe Traktion +
+aktive Weiterentwicklung
+--
+
+
+[top,background-video="images/atomic-bomb.mp4",background-video-loop="false"]
+=== The _billion-dollar mistake_
+
+
+=== Code Annotations
+
+[.bgap]
+Unterstützt statische Analyse. Auch zur Dokumentation für Entwickler.
+
+[small]
+.Nullability
+* `javax.validation.constraints.NotNull`? → *Nein!* Scope: Persistent
+* JSR305  `javax.annotation.Nullable`? → *Nein!* Problem: JDK9+ Jigsaw Package Clash
+* Empfehlung: *`org.jetbrains.annotations`* oder *`org.eclipse.jdt.annotation`*
+
+[.x-small.decent.tgap]
+--
+.Eher esoterischer Art & discouraged
+Method contract annotations `@Contract("null -> fail; _ -> param1")`
+--
+
+=== Code Annotations – Empfehlung
+
+[decent]#icon:thumbs-up[Verdict]# An *allen Schnittstellen* alle in/out-Parameter annotieren
+
+[source,java]
+----
+public interface Business {
+
+   @NotNull @Unmodifiable
+   public List<String> findNames(
+                          @Range(1,9) int length,
+                          @Nullable   String contains,
+                          @NotNull    String prefix
+                       );
+}
+----
+
+Rest → möglichst `private` oder package protected → flow infer +
+…oder Kotlin
+
+
+=== Struktur (1/4)
+https://www.hello2morrow.com/[SonarGraph & Sotograph] [decent]#icon:thumbs-down[Verdict]#::
+  Graphisch unterstützte, *manuelle DSL-basierte* Architektur- +
+  beschreibung (Layer & Slices). *Enterprisey*. Commercial. Sperrig.
+
+https://github.com/moditect/deptective[deptective]  [decent]#( icon:thumbs-up[Verdict] )#:: `javac`-Plugin (*APT*) rein zum Dependency-Check, Nahtlos & permanent, Jeder Zugriff muss explizit erlaubt werden. Nische. Elegant. *Klein & Fein.*
+
+https://github.com/clarkware/jdepend[JDepend] [decent]#icon:meh[Verdict]#:: Dependency-Analyzer mit Metriken. *Standalone*. SonarQube Plugin.
+
+
+=== Struktur (2/4)
+
+https://www.archunit.org/[ArchUnit]  [decent]#? (icon:thumbs-up[Verdict]) ?#:: Neuer Stern am deutschen Himmel, Basiert auf *Java-DSL* & *JUnit*.
+[.source.small,java,]
+----
+slices().matching("com.myapp.(*)..").should().beFreeOfCycles()
+----
+
+https://github.com/nidi3/code-assert/[`code-assert`]:: Wrapper um *JDepend, JaCoCo, Findbugs, PMD, Checkstyle, ktlint, detekt* zur Einbindung via *JUnit*. Nische.
+
+=== Struktur (3/4)
+
+https://jqassistant.org/[jQAssistant]  [decent]#?#:: Graph-basierte Regeln, setzt auf Neo4j-Datenbank, textuelle DSL (XML, aber auch Asciidoctor)
+[.source.small]
+----
+MATCH
+  (t:Type)-[:DECLARES]->(m:Method)
+RETURN
+  t.fqn AS Type, count(t) AS DeclaredMethods
+ORDER BY
+  DeclaredMethods DESC
+LIMIT 20
+----
+
+=== Struktur (4/4)
+
+Java 9+ Jigsaw Modules::
+[source,java]
+----
+module com.mysql.jdbc {
+    requires java.sql;             // Module dependency
+    exports com.mysql.jdbc;        // Export module package → enables access
+    provides java.sql.Driver       // SPI: Provide service instance
+        with com.mysql.jdbc.Driver;
+}
+----
+
+
+== Web
+
+=== Javascript/Typescript – Linter
+
+[.col3-lc]
+--
+video::eslint.mp4[ESLint Overview]
+--
+
+[.col3-r.x-small]
+--
+1. Urvater: _JSLint_  +
+[decent]#(_„Javascript – the good parts"_)#
+2. Fork: _JSHint_ +
+[decent]#(_"don't be evil"_ & less opinionated)#
+3. Nachfolger & Empfehlung: _ESLint_
+
+.ESlint
+* Breite Integration +
+  [decent]#Alles was Rang & Namen hat#
+* Viele Konfigurationsoptionen & +
+  Kaskadierende Konfiguration
+
+Basiskonfiguration → https://github.com/airbnb/javascript/tree/master/packages/eslint-config-airbnb[`eslint-config-airbnb`]
+--
+
+=== Javascript/Typescript – Typisierung
+.Facebook's Flow (Preprocessor)
+[.small.source,javascript]
+----
+// @flow
+function square(n: number): number {
+  return n * n;
+}
+
+square("2"); // Error!
+----
+↓
+
+.Empfehlung: Typescript
+[.small.source,typescript]
+----
+interface Person {
+    firstName: string;
+    lastName: string;
+}
+
+function greeter(person: Person) {
+    return "Hello, " + person.firstName + " " + person.lastName;
+}
+
+let user = { firstName: "Jane", lastName: "User" };
+----
+
+
+== Sonstiges
+
+=== .NET
+FXCop:: Recht gute Erfahrungen, integriert in `msbuild`
+
+https://www.jetbrains.com/help/resharper/ReSharper_Command_Line_Tools.html[ReSharper CLI Tools]:: `InspectCode` und `dupFinder` guter Ergänzung in 2ter Reihe
+
+
+=== Kotlin
+https://ktlint.github.io/[ktlint (Pinterest)]:: An anti-bikeshedding Kotlin linter with built-in formatter. Simple.
+
+https://arturbosch.github.io/detekt/[detekt]:: Code smell analysis. Highly configurable. SonarQube Integration. Nutzt auch IDEA headless.
+
+
+image::https://arturbosch.github.io/detekt/images/detekt_in_action.png[]
+
+
+== Bottom line
+1. *Aim high* on start. *Adjust goals fast* on first annoyances! +
+[.decent.small]#→  Discuss every major violation & suppression +
+→  tweak settings freehanded#
+2. *Enforce* & verify regular!
+3. *Use live-tools & learn*: IDEA (& SonarLint)
+3. In doubt: (IDEA) + SonarQube/SonarLint + ESLint
+
+
+
